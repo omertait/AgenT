@@ -29,7 +29,7 @@ llm_interact step:
           the result of the previous step is the input for the next step.
           **if the step is the first one, use the task function's argument - task_input instead**
 - model: str - the model to use for the llm 
-(default is "gpt-3.5-turbo", defined in the handle_llm_interact)
+(default is "gpt-4o-mini", defined in the handle_llm_interact)
 
 '''
 from enum import Enum
@@ -76,12 +76,12 @@ def handle_llm_interact(agent_instance, step, response):
     response = agent_instance.interact_func(
         llm_client=agent_instance.llm_client,
         messages=messages, 
-        model=step.get("model", "gpt-3.5-turbo"))
+        model=step.get("model", "gpt-4o-mini"))
     
     return response
     
 def handle_tool(agent_instance, step, response):
-    return agent_instance.tools[step["tool"]](step["input_data_func"](response))
+    return agent_instance.tools[step["tool"]][0](**step["input_data_func"](response))
 
 def handle_update_memory(agent_instance, step, response):
     return step["update_memory_func"](response, step["memory_arg"])
@@ -142,11 +142,10 @@ def build_llm_interact(step, task_input, memory):
 def build_tool(step, task_input, memory):
     tool_name = step["tool"]
     input_data_func_expression = step["input_data_func"]
-
     tree = ast.parse(input_data_func_expression, mode='eval')
     # need to implement a safe eval
     code = compile(tree, '<string>', 'eval')
-    return {"type" : StepType.TOOL.value, "tool": tool_name, "input_data_func": lambda input: eval(code, {'input': input})}
+    return {"type" : StepType.TOOL.value, "tool": tool_name, "input_data_func": lambda last_step_result: eval(code, {'last_step_result': last_step_result})}
 
 def build_update_memory(step, task_input, memory):
     # memory, memory_arg_input

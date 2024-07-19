@@ -63,7 +63,7 @@ class FlowGraph:
             node = self.nodes[current_node]
             if isinstance(node, Task):
                 result = node.execute(result=result, memory=memory)
-                print(f"Task {current_node} executed successfully.\nResult:\n{result}\n\n")
+                print(f"Task {current_node} executed successfully.\nResult:\n{result}\n---------------------------------\n")
                 next_node = None
                 if current_node in self.edges:
                     next_node = self.edges[current_node][0][0]

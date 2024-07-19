@@ -1,6 +1,9 @@
 
 
 
+import time
+
+
 class Agent:
     '''
     Agent class
@@ -21,8 +24,8 @@ class Agent:
         self.step_handler = step_handler
 
 
-    def add_tool(self, tool_name, tool_func):
-        self.tools[tool_name] = tool_func
+    def add_tool(self, tool_name, tool_info):
+        self.tools[tool_name] = tool_info # tool_info: [toolFunction, toolDescription]
     
 
     def execute(self, steps):
@@ -39,7 +42,13 @@ class Agent:
         for step in steps:
             handler = self.step_handler.get(step["type"])
             if handler:
+                # start time
+                start_time = time.time()
                 last_step_response = handler(self, step, last_step_response)
+                # end time
+                end_time = time.time()
+                print(f"step {step['type']} executed in {end_time - start_time} seconds.")
+                print(f"step {step['type']} executed successfully.\nResult:\n{last_step_response}\n---------------------------------\n")
         return last_step_response
     
     

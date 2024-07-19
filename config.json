@@ -1,0 +1,59 @@
+{
+    "tools": [
+      {
+        "name": "calculator",
+        "function": "def calculator_two_numbers(x, y, operation):\n    if operation == \"add\":\n        return x + y\n    elif operation == \"subtract\":\n        return x - y\n    elif operation == \"multiply\":\n        return x * y\n    elif operation == \"divide\":\n        return x / y\n    else:\n        return None",
+        "description": "calculates two numbers based on given operation (add/ subtract/ multiply/ divide)",
+        "parameters": {
+          "x": "number",
+          "y": "number",
+          "operation": "string"
+        }
+      }
+    ],
+    "agent": {
+      "name": "John",
+      "role": "friend",
+      "tools": ["calculator"]
+    },
+    "task_functions": [
+      {
+        "name": "task_hello_func",
+        "steps": [
+          { "type": "tool", "tool": "calculator", "input_data_func": "{\"x\": 1, \"y\": 2, \"operation\": \"add\"}" },
+          { "type": "llm_interact", "promptTemplate": "respond to your student and help him find the answer to his question: {task_input}\\n\\nact as a private tutor. you already solved the question without showing the student the answer and the answer is: {last_step_result}.", "model": "gpt-4o-mini" }
+        ]
+      },
+      {
+        "name": "task_summ_func",
+        "steps": [
+          { "type": "llm_interact", "promptTemplate": "summarize to one sentence: {task_input}", "model": "gpt-4o-mini" }
+        ]
+      }
+    ],
+    "tasks": [
+      {
+        "name": "task",
+        "function": "task_hello_func"
+      },
+      {
+        "name": "task_summ",
+        "function": "task_summ_func"
+      }
+    ],
+    "flow_graph": {
+      "tasks": [
+        { "name": "start", "task": "task" },
+        { "name": "summary", "task": "task_summ" }
+      ],
+      "start_node": "start",
+      "edges": [
+        { "from": "start", "to": "summary" }
+      ]
+    },
+    "conversation_manager": {
+      "conversation_id": "1",
+      "input": "what is 1 + 2"
+    }
+  }
+  
