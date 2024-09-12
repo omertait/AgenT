@@ -16,6 +16,8 @@ AGent is a powerful, flexible framework designed to create and manage agent-base
 ### 🔄 Workflow Customization
 - **Flexible design**: Adapt workflows to your specific requirements with ease. The framework is versatile enough to handle various use cases, from simple task automation to complex AI-driven workflows.
 
+## UI
+you are invited to check out the UI for AGent framework [here](https://github.com/omertait/AGent-Frontend)
 
 ## Work in Progress
 Note that this project is still in development, and there are many features and improvements that i'm planning to add in the future.
