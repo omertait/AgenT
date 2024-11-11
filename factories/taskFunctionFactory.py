@@ -30,7 +30,7 @@ class TaskFunctionFactory:
                 steps = []
                 for step in steps_specs:
                     steps.append(self.stepHandler.build(step, task_input, memory))
-
+                    
                 return steps
             
             validate(func)

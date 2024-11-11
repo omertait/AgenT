@@ -81,6 +81,7 @@ def handle_llm_interact(agent_instance, step, response):
     return response
     
 def handle_tool(agent_instance, step, response):
+
     return agent_instance.tools[step["tool"]][0](**step["input_data_func"](response))
 
 def handle_update_memory(agent_instance, step, response):
@@ -130,7 +131,7 @@ def validateSteps(step) -> bool:
 # builders
 def build_llm_interact(step, task_input, memory):
     promptTemplate = step["promptTemplate"]
-    model = step.get("model", "gpt-3.5-turbo")
+    model = step.get("model", "gpt-4o-mini")
 
     def messages_func(last_step_result):
         messages = [
@@ -145,7 +146,7 @@ def build_tool(step, task_input, memory):
     tree = ast.parse(input_data_func_expression, mode='eval')
     # need to implement a safe eval
     code = compile(tree, '<string>', 'eval')
-    return {"type" : StepType.TOOL.value, "tool": tool_name, "input_data_func": lambda last_step_result: eval(code, {'last_step_result': last_step_result})}
+    return {"type" : StepType.TOOL.value, "tool": tool_name, "input_data_func": lambda last_step_result: eval(code, {'last_step_result': last_step_result, 'task_input' : task_input, 'memory': memory})}
 
 def build_update_memory(step, task_input, memory):
     # memory, memory_arg_input
