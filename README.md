@@ -19,6 +19,9 @@ AGent is a powerful, flexible framework designed to create and manage agent-base
 ## UI
 you are invited to check out the UI for AGent framework [here](https://github.com/omertait/AGent-Frontend)
 
+## Documentation
+For more detailed information on how to use AGent framework, please refer to the [documentation](https://github.com/omertait/AgenT/blob/main/Documentation.md).
+
 ## Work in Progress
 Note that this project is still in development, and there are many features and improvements that i'm planning to add in the future.
 some of the features that i'm planning to add are:
