@@ -34,6 +34,7 @@ llm_interact step:
 '''
 from enum import Enum
 import ast
+import re
 
 class StepType(Enum):
     UPDATE_MEMORY = "update_memory"
@@ -70,7 +71,11 @@ def handle_llm_interact(agent_instance, step, response):
     messages = [
         {"role": "system", "content": agent_instance.role},
     ]
-    step_messages = step["messages"](response)
+    try:
+        step_messages = step["messages"](response)
+    except Exception as e:
+        print(f"error in step messages function: {e}")
+
     messages.extend(step_messages)
 
     response = agent_instance.interact_func(
@@ -81,7 +86,6 @@ def handle_llm_interact(agent_instance, step, response):
     return response
     
 def handle_tool(agent_instance, step, response):
-
     return agent_instance.tools[step["tool"]][0](**step["input_data_func"](response))
 
 def handle_update_memory(agent_instance, step, response):
@@ -133,12 +137,40 @@ def build_llm_interact(step, task_input, memory):
     promptTemplate = step["promptTemplate"]
     model = step.get("model", "gpt-4o-mini")
 
+    def evaluate_placeholders(template, **context):
+        """
+        Dynamically evaluate placeholders in the template using the provided context.
+        Supports nested keys like {memory['key']}.
+        """
+        def replacer(match):
+            expression = match.group(1)
+            try:
+                # Evaluate the expression within the context
+                return str(eval(expression, {}, context))
+            except Exception as e:
+                return f"<Error: {e}>"
+
+        # Match anything inside {curly_braces}
+        return re.sub(r"{(.*?)}", replacer, template)
+
     def messages_func(last_step_result):
+        # Define the context available to the prompt
+        context = {
+            "memory": memory,
+            "task_input": task_input,
+            "last_step_result": last_step_result,
+        }
+
+        # Process the prompt template
+        formatted_prompt = evaluate_placeholders(promptTemplate, **context)
+
         messages = [
-                    {"role": "user", "content": promptTemplate.format(memory=memory, task_input=task_input, last_step_result=last_step_result)},
-                ]
+            {"role": "user", "content": formatted_prompt},
+        ]
         return messages
-    return {"type" : StepType.LLM_INTERACT.value, "messages" : messages_func, "model": model}
+
+    return {"type": StepType.LLM_INTERACT.value, "messages": messages_func, "model": model}
+
 
 def build_tool(step, task_input, memory):
     tool_name = step["tool"]

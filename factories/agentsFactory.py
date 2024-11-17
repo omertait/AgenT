@@ -11,6 +11,7 @@ class AgentsFactory:
         self.llm_client = llm_client
         self.toolsFactory = ToolsFactory()
         self.step_handler = StepHandler()
+        self.agents = {}
 
     def createAgent(
             self, 
@@ -38,4 +39,11 @@ class AgentsFactory:
         if tools is not None:
             for tool_name in tools:
                 agent.add_tool(tool_name, self.toolsFactory.getTool(tool_name))
+        
+        self.agents[name] = agent  # Store the agent
         return agent
+    
+    def getAgent(self, name):
+        if name not in self.agents:
+            raise ValueError(f"Agent with name '{name}' not found.")
+        return self.agents[name]
