@@ -1,6 +1,8 @@
+import json
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List, Dict, Optional
+from apiUtils import load_schema, save_schema, transform_schema_to_openai_format
 from buildingBlocks.flowGraph import FlowGraph
 from conversationManger import ConversationManager
 from factories.agentsFactory import AgentsFactory
@@ -140,5 +142,57 @@ def run_workflow(user_input: UserInput):
     try:
         response, run_time = conversation_manager.run(user_input.user_input)
         return {"response": response, "run_time": run_time}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
+
+# Load and transform the schema
+original_schema = load_schema("schema.json")
+openai_response_schema = transform_schema_to_openai_format(original_schema)
+save_schema("transformed_schema.json", openai_response_schema)  # debug
+
+class GenerateRequest(BaseModel):
+    """Request model for the generate endpoint."""
+    prompt: str
+
+
+class GenerateResponse(BaseModel):
+    """Response model for the generate endpoint."""
+    workflow: Dict
+
+
+@app.post("/generate", response_model=GenerateResponse)
+def generate_workflow(request: GenerateRequest):
+    """
+    Generate a workflow JSON object based on the user's prompt.
+    """
+    try:
+        # Prepare the prompt for the model
+        llm_prompt = (
+            f"Based on the following user prompt, generate a JSON object that adheres to the provided schema.\n\n"
+            f"User Prompt: {request.prompt}\n\n"
+            f"Ensure the output strictly complies with the schema."
+        )
+
+        # Call the OpenAI API with structured outputs
+        response = llm_client.chat.completions.create(
+            model="gpt-4o-mini", 
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant for creating structured JSON Agentic workflows."},
+                {"role": "user", "content": llm_prompt}
+            ],
+            response_format=openai_response_schema
+        )
+
+        # Extract the structured JSON output
+        generated_json = response.choices[0].message.content
+
+        # Convert JSON string to a Python dictionary
+        workflow = json.loads(generated_json)
+
+        return {"workflow": workflow}
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
